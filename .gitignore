@@ -1,0 +1,16 @@
+# 密钥和环境
+.env
+
+# 向量库
+chroma_db/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 数据（不提交个人文档）
+data/
+
+# 系统
+.DS_Store
