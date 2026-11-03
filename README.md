@@ -71,6 +71,16 @@ curl -X POST http://localhost:8000/ingest \
   -d '{"folder": "data"}'
 ```
 
+**Docker 一键部署：**
+```bash
+docker build -t rag-kb-assistant .
+docker run -p 8000:8000 --env-file .env \
+  -v $(pwd)/chroma_db:/app/chroma_db \
+  -v $(pwd)/data:/app/data \
+  rag-kb-assistant
+# 容器起来后先 POST /ingest 构建索引，再 POST /ask
+```
+
 ## 项目结构
 ```
 rag-kb-assistant/
