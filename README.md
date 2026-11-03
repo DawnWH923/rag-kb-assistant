@@ -1,5 +1,7 @@
 # RAG 智能知识库问答助手
 
+[![CI](https://github.com/DawnWH923/rag-kb-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/DawnWH923/rag-kb-assistant/actions/workflows/ci.yml)
+
 基于 LangChain + Chroma + DeepSeek 大模型的 Retrieval-Augmented Generation (RAG) 系统，支持多格式文档入库、向量检索 + Cross-Encoder 精排、带引用来源的问答，并提供 FastAPI RESTful 接口。
 
 ## 功能
