@@ -1,6 +1,7 @@
 """
 ask.py — 命令行和你的文档聊天
 先运行 ingest.py 建好索引，再运行 python ask.py
+检索链路：向量召回 8 条 → Cross-Encoder 精排取 4 条 → DeepSeek 生成
 """
 import os
 from dotenv import load_dotenv
@@ -10,6 +11,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+
+from rerank import rerank
 
 load_dotenv()
 
@@ -26,8 +29,18 @@ prompt = ChatPromptTemplate.from_template("""请根据以下上下文回答问�
 问题：{question}
 回答：""")
 
+retriever = vs.as_retriever(search_kwargs={"k": 8})  # 先向量召回 8 条
+
+
+def retrieve(question: str) -> str:
+    """向量召回 -> Cross-Encoder 精排，返回拼接后的上下文"""
+    candidates = retriever.invoke(question)
+    top_texts = rerank(question, [d.page_content for d in candidates], top_n=4)
+    return "\n\n".join(top_texts)
+
+
 chain = (
-    {"context": vs.as_retriever(search_kwargs={"k": 4}), "question": RunnablePassthrough()}
+    {"context": retrieve, "question": RunnablePassthrough()}
     | prompt | llm | StrOutputParser()
 )
 
