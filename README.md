@@ -41,9 +41,10 @@ pip install -r requirements.txt
 ```
 
 ### 2. 配置环境变量
-创建 `.env` 文件：
+复制 `.env.example` 为 `.env` 并填写：
 ```
-DEEPSEEK_API_KEY=your_api_key
+DEEPSEEK_API_KEY=your_api_key   # 必填，DeepSeek 密钥
+API_TOKEN=your_token            # 公网部署时必填（接口鉴权）；本地开发可不设
 ```
 
 ### 3. 构建索引
@@ -66,12 +67,16 @@ uvicorn api:app --reload --port 8000
 
 curl -X POST http://localhost:8000/ask \
   -H "Content-Type: application/json" \
+  -H "X-API-Token: your_token" \
   -d '{"question": "什么是RFM模型？"}'
 
 curl -X POST http://localhost:8000/ingest \
   -H "Content-Type: application/json" \
+  -H "X-API-Token: your_token" \
   -d '{"folder": "data"}'
 ```
+
+> 🔐 **鉴权说明**：`.env` 里设置了 `API_TOKEN` 后，`/ingest`、`/ask` 要求请求头 `X-API-Token` 匹配，否则返回 401；`/health` 免鉴权供探活。本地开发不设 `API_TOKEN` 则接口开放。token 比较使用 `secrets.compare_digest`，防时序侧信道。
 
 **Docker 一键部署：**
 ```bash
@@ -83,16 +88,31 @@ docker run -p 8000:8000 --env-file .env \
 # 容器起来后先 POST /ingest 构建索引，再 POST /ask
 ```
 
+## 部署到腾讯云轻量应用服务器
+```bash
+# 1. 服务器安装 Docker 并 clone 本仓库
+# 2. cp .env.example .env，填好 DEEPSEEK_API_KEY 和 API_TOKEN
+bash deploy.sh   # 构建 → 起容器（--restart unless-stopped）→ 健康检查
+# 3. 腾讯云控制台防火墙放行 8000 端口（生产建议 Nginx 反代 + 仅放行 80/443）
+# 4. 公网调用示例：
+curl -X POST http://<服务器公网IP>:8000/ask \
+  -H "Content-Type: application/json" \
+  -H "X-API-Token: <你的API_TOKEN>" \
+  -d '{"question": "什么是RFM模型？"}'
+```
+
 ## 项目结构
 ```
 rag-kb-assistant/
 ├── data/               # 文档目录（PDF/MD/TXT，不入库）
 ├── chroma_db/          # 向量库（自动生成，不入库）
 ├── .env                # API 密钥（不入库）
+├── .env.example        # 环境变量模板
 ├── ingest.py           # 构建索引（离线一次）
 ├── ask.py              # 命令行问答
 ├── rerank.py           # Cross-Encoder 精排
-├── api.py              # FastAPI 服务（/ingest /ask /health）
+├── api.py              # FastAPI 服务（/ingest /ask /health，含 token 鉴权）
+├── deploy.sh           # 云服务器一键部署脚本
 ├── test_query.py       # 快速冒烟测试（3个固定问题）
 └── requirements.txt
 ```

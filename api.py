@@ -3,13 +3,17 @@ api.py — FastAPI 封装 REST 接口
 启动：uvicorn api:app --reload --port 8000
 交互文档：http://localhost:8000/docs
 接口：
-  GET  /health  健康检查
+  GET  /health  健康检查（免鉴权）
   POST /ingest  把指定目录下的 PDF/Markdown 切块入库
   POST /ask     提问（向量召回 recall_k -> Cross-Encoder 精排 top_n -> DeepSeek 生成）
+鉴权：
+  环境变量 API_TOKEN 未设置时接口开放（本地开发）；
+  设置后 /ingest /ask 要求请求头 X-API-Token 匹配，用于公网部署防护。
 """
 import os
+import secrets
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader, TextLoader
@@ -42,7 +46,14 @@ PROMPT = ChatPromptTemplate.from_template(
 回答："""
 )
 
-app = FastAPI(title="RAG 知识库问答 API", version="1.1.0")
+app = FastAPI(title="RAG 知识库问答 API", version="1.2.0")
+
+
+def verify_token(x_api_token: str | None = Header(default=None, alias="X-API-Token")):
+    """公网部署防护：校验固定 token；compare_digest 防时序侧信道"""
+    expected = os.getenv("API_TOKEN", "")
+    if expected and not secrets.compare_digest(x_api_token or "", expected):
+        raise HTTPException(status_code=401, detail="Invalid or missing X-API-Token")
 
 
 class IngestRequest(BaseModel):
@@ -60,7 +71,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/ingest")
+@app.post("/ingest", dependencies=[Depends(verify_token)])
 def ingest(req: IngestRequest):
     """读取目录下的 PDF/Markdown，切分后写入向量库（可重复调用，增量追加）"""
     try:
@@ -76,7 +87,7 @@ def ingest(req: IngestRequest):
     return {"status": "ok", "documents": len(docs), "chunks": len(chunks)}
 
 
-@app.post("/ask")
+@app.post("/ask", dependencies=[Depends(verify_token)])
 def ask(req: AskRequest):
     if not req.question.strip():
         raise HTTPException(status_code=422, detail="问题不能为空")
