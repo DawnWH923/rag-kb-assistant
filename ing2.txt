@@ -1,0 +1,21 @@
+﻿py : C:\Users\Dawn\projects\rag-kb-assistant\ingest.py:7: DeprecationWarning: `langchain-community` is being sunset and
+ is no longer actively maintained. See https://github.com/langchain-ai/langchain-community/issues/674 for details and m
+igration guidance toward standalone integration packages.
+所在位置 行:1 字符: 240
++ ... HF_ENDPOINT="https://hf-mirror.com"; py ingest.py *> ing2.txt; Get-Co ...
++                                          ~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\Dawn\p...ation packages.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader, TextLoader
+读到 4 个文档块
+切分成 9 个片段
+C:\Users\Dawn\projects\rag-kb-assistant\ingest.py:26: LangChainDeprecationWarning: The class `HuggingFaceEmbeddings` wa
+s deprecated in LangChain 0.2.2 and will be removed in 1.0. An updated version of the class exists in the `langchain-hu
+ggingface package and should be used instead. To use it run `pip install -U `langchain-huggingface` and import as `from
+ `langchain_huggingface import HuggingFaceEmbeddings``.
+  emb = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh-v1.5")
+
+Loading weights:   0%|          | 0/71 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 71/71 [00:00<00:00, 1703.57it/s]
+✅ 入库完成！向量已存到 chroma_db/
