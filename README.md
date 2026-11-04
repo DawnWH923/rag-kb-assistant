@@ -91,7 +91,7 @@ docker run -p 8000:8000 --env-file .env \
 ## 部署到腾讯云轻量应用服务器
 ```bash
 # 1. 服务器安装 Docker 并 clone 本仓库
-# 2. cp .env.example .env，填好 DEEPSEEK_API_KEY 和 API_TOKEN
+# 2. cp .env.example .env，填好 DEEPSEEK_API_KEY 和 API_TOKEN（已内置 HF 国内镜像 HF_ENDPOINT）
 bash deploy.sh   # 构建 → 起容器（--restart unless-stopped）→ 健康检查
 # 3. 腾讯云控制台防火墙放行 8000 端口（生产建议 Nginx 反代 + 仅放行 80/443）
 # 4. 公网调用示例：

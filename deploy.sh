@@ -25,8 +25,8 @@ docker run -d --name "$CONTAINER_NAME" \
   -v "$(pwd)/chroma_db":/app/chroma_db \
   "$IMAGE_NAME"
 
-echo "[3/3] 健康检查（模型冷启动约 20-60 秒）..."
-for i in $(seq 1 30); do
+echo "[3/3] 健康检查（首次启动需从镜像源下载 embedding 模型，约 1-3 分钟）..."
+for i in $(seq 1 90); do
   if curl -fsS "http://localhost:$PORT/health" >/dev/null 2>&1; then
     echo "✅ 部署成功：http://localhost:$PORT/health"
     echo "后续调用 /ingest /ask 需带请求头：X-API-Token: <你 .env 里的 API_TOKEN>"
